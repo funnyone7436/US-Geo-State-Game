@@ -83,8 +83,9 @@ export default function App() {
     let cheersSound;
 
     if (isGameOver) {
-      fireworksSound = new Audio('/r3f/music/fireworks.mp3');
-      cheersSound = new Audio('/r3f/music/cheers.mp3');
+      // import.meta.env.BASE_URL automatically injects '/US-Geo-State-Game/' in production
+		fireworksSound = new Audio(`${import.meta.env.BASE_URL}r3f/music/fireworks.mp3`);
+		cheersSound = new Audio(`${import.meta.env.BASE_URL}r3f/music/cheers.mp3`);
 
       fireworksSound.loop = true;
       cheersSound.loop = true;
