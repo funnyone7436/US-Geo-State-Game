@@ -23,6 +23,9 @@ export default function App() {
   const [remainingItems, setRemainingItems] = useState(new Set(RECOGNITION_LIST));
   const [micStatus, setMicStatus] = useState("Initializing Mic...");
   const [micResetKey, setMicResetKey] = useState(0);
+  
+  // 💡 NEW STATE: Track the current clue
+  const [hintText, setHintText] = useState("");
 
   // 💡 TOGGLE BETWEEN ERASE AND POPULATE
   const toggleGameMode = () => {
@@ -31,6 +34,7 @@ export default function App() {
     setGameStarted(false);
     setTime(0);
     setTargetRegion(null);
+    setHintText(""); // Clear hint on reset
     setMicStatus(`Play Style: ${newMode.toUpperCase()}! Say any state to start.`);
     // 'Erase' starts full, 'Populate' starts empty
     setRemainingItems(newMode === 'erase' ? new Set(RECOGNITION_LIST) : new Set());
@@ -40,6 +44,15 @@ export default function App() {
     setMicResetKey(prev => prev + 1); 
     setMicStatus("🔄 Restarting Mic...");
   }, []);
+
+  // 💡 NEW FUNCTION: Pick a random missing item to show as a hint
+  const handleGetHint = useCallback(() => {
+    const missingItems = RECOGNITION_LIST.filter(item => !remainingItems.has(item));
+    if (missingItems.length > 0) {
+      const randomHint = missingItems[Math.floor(Math.random() * missingItems.length)];
+      setHintText(`Clue: ${randomHint}`);
+    }
+  }, [remainingItems]);
 
   const handleVoiceCommand = useCallback((command) => {
     let cleanCommand = command.trim().toLowerCase()
@@ -67,6 +80,7 @@ export default function App() {
       if (!isAlreadyFound) {
         setTargetRegion(meshName);
         setMicStatus(`✅ Found: ${finalMatch}!`);
+        setHintText(""); // 💡 Automatically clear the clue when they find an item!
         setRemainingItems((prev) => {
           const next = new Set(prev);
           if (gameMode === 'erase') next.delete(finalMatch);
@@ -83,24 +97,24 @@ export default function App() {
   
   // 🚀 TESTING HACK (ACTIVE) 🚀
   // 1. Secretly store the newest version of the command function in a Ref
-/*   const latestCommandRef = useRef(handleVoiceCommand);
-  useEffect(() => {
-    latestCommandRef.current = handleVoiceCommand;
-  }, [handleVoiceCommand]);
+	 const latestCommandRef = useRef(handleVoiceCommand);
+	  useEffect(() => {
+		latestCommandRef.current = handleVoiceCommand;
+	  }, [handleVoiceCommand]);
 
-  // 2. Run the timer exactly ONE time so it never restarts
-  useEffect(() => {
-    let index = 0; 
-    const hackInterval = setInterval(() => {
-      if (index < RECOGNITION_LIST.length) {
-        latestCommandRef.current(RECOGNITION_LIST[index]);
-        index++;
-      } else {
-        clearInterval(hackInterval);
-      }
-    }, 800); 
-    return () => clearInterval(hackInterval);
-  }, []);  */
+	  // 2. Run the timer exactly ONE time so it never restarts
+	  useEffect(() => {
+		let index = 0; 
+		const hackInterval = setInterval(() => {
+		  if (index < RECOGNITION_LIST.length) {
+			latestCommandRef.current(RECOGNITION_LIST[index]);
+			index++;
+		  } else {
+			clearInterval(hackInterval);
+		  }
+		}, 800); 
+		return () => clearInterval(hackInterval);
+	  }, []);  
   // 🚀 END TESTING HACK 🚀
 
   useEffect(() => {
@@ -182,6 +196,9 @@ export default function App() {
         gameMode={gameMode}             
         onToggleMode={toggleGameMode}   
         onResetMic={forceMicReset} 
+        itemsLeftToFind={itemsLeftToFind} // 👈 Passed down
+        hintText={hintText}               // 👈 Passed down
+        onGetHint={handleGetHint}         // 👈 Passed down
       />
       
       <SpeechController 

@@ -8,9 +8,12 @@ export default function AppUI({
   totalStates = 50,
   totalCapitals = 50,
   feedbackText,
-  gameMode,           // 👈 New prop for current mode
-  onToggleMode,       // 👈 New prop to switch modes
-  onResetMic
+  gameMode,           
+  onToggleMode,       
+  onResetMic,
+  itemsLeftToFind,    // 👈 New Prop
+  hintText,           // 👈 New Prop
+  onGetHint           // 👈 New Prop
 }) {
   
   const formatTime = (seconds) => {
@@ -24,10 +27,11 @@ export default function AppUI({
   else if (feedbackText && feedbackText.includes('✅')) feedbackColor = '#4caf50'; 
   else if (feedbackText && feedbackText.includes('❌')) feedbackColor = '#f56565'; 
 
-  // 💡 Adjust the label text based on play style
- // const modeText = gameMode === 'erase' ? 'Left' : 'Found';
   // Check if we are at the start of the game based on the mode
   const isAtStart = gameMode === 'erase' ? statesCount === totalStates : statesCount === 0;
+
+  // 💡 Logic to show the hint system: Populate mode, 6 or less items left, but not game over yet
+  const showHintSystem = gameMode === 'populate' && itemsLeftToFind <= 6 && itemsLeftToFind > 0;
 
   return (
     <>
@@ -49,7 +53,7 @@ export default function AppUI({
         backdropFilter: 'blur(4px)'
       }}>
         
-        {/* 💡 NEW PLAY STYLE TOGGLE BUTTON */}
+        {/* PLAY STYLE TOGGLE BUTTON */}
         <button 
             onClick={onToggleMode}
             style={{
@@ -114,6 +118,45 @@ export default function AppUI({
           </span>
         </div>
         
+        {/* 💡 NEW HINT SYSTEM UI */}
+        {showHintSystem && (
+          <div style={{ marginTop: '4px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            {!hintText ? (
+              <button 
+                onClick={onGetHint}
+                style={{
+                  background: 'rgba(255,255,255,0.1)',
+                  border: '1px dashed rgba(255,255,255,0.4)',
+                  color: '#fff',
+                  borderRadius: '4px',
+                  padding: '6px',
+                  fontSize: '12px',
+                  cursor: 'pointer',
+                  pointerEvents: 'auto',
+                  transition: 'background 0.2s'
+                }}
+                onMouseOver={(e) => e.target.style.background = 'rgba(255,255,255,0.2)'}
+                onMouseOut={(e) => e.target.style.background = 'rgba(255,255,255,0.1)'}
+              >
+                💡 Need a Clue?
+              </button>
+            ) : (
+              <div style={{ 
+                color: '#ffd700', 
+                fontSize: '13px', 
+                fontWeight: 'bold', 
+                textAlign: 'center', 
+                backgroundColor: 'rgba(255,215,0,0.1)', 
+                padding: '6px', 
+                borderRadius: '4px',
+                border: '1px solid rgba(255,215,0,0.3)'
+              }}>
+                {hintText}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* DYNAMIC STATUS TEXT & RESET BUTTON */}
         {feedbackText && (
           <div style={{ 
@@ -180,7 +223,7 @@ export default function AppUI({
           pointerEvents: 'none'
       }}>
           <div>
-            {/* 💡 CONGRATULATIONS LOGIC IMPLEMENTED HERE */}
+            {/* CONGRATULATIONS LOGIC */}
             {feedbackText && feedbackText.includes('EXPLORER')
               ? "Congratulations! 🎉"
               : (!isGameActive && isAtStart 
