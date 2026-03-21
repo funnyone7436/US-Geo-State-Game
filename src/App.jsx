@@ -82,7 +82,7 @@ export default function App() {
   }, [gameStarted, gameMode, remainingItems]);
   
   // 🛠️ TESTING HACK (Bulletproof Version - Commented out for normal play)
-  /*
+  
   const latestCommandRef = useRef(handleVoiceCommand);
   useEffect(() => {
     latestCommandRef.current = handleVoiceCommand;
@@ -100,7 +100,7 @@ export default function App() {
     }, 800); 
     return () => clearInterval(hackInterval);
   }, []); 
-  */
+  
 
   useEffect(() => {
     if (gameStarted && remainingItems.size > 0 && remainingItems.size < RECOGNITION_LIST.length) {
