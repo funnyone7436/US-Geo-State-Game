@@ -81,20 +81,21 @@ export default function App() {
     }
   }, [gameStarted, gameMode, remainingItems]);
   
-  // 🛠️ TESTING HACK (Still works perfectly with the new modes!)
-  
+  // 🛠️ TESTING HACK (Fixed to remember its place!)
+  const hackIndexRef = useRef(0); // 💡 1. Store the index in a ref so it survives re-renders
+
   useEffect(() => {
-    let index = 0;
     const hackInterval = setInterval(() => {
-      if (index < RECOGNITION_LIST.length) {
-        handleVoiceCommand(RECOGNITION_LIST[index]);
-        index++;
+      if (hackIndexRef.current < RECOGNITION_LIST.length) {
+        handleVoiceCommand(RECOGNITION_LIST[hackIndexRef.current]);
+        hackIndexRef.current++; // 💡 2. Increase the ref value
       } else {
         clearInterval(hackInterval);
       }
     }, 800); 
+
     return () => clearInterval(hackInterval);
-  }, [handleVoiceCommand]);  
+  }, [handleVoiceCommand]);
   
 
   useEffect(() => {
