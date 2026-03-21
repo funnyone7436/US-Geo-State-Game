@@ -13,24 +13,31 @@ import SceneBackground from './components/SceneBackground'
 import { US_STATES, CAPITALS, PRONUNCIATION_ALIASES, RECOGNITION_LIST } from './constants';
 
 export default function App() {
+  // 💡 TRACK THE PLAY STYLE
+  const [gameMode, setGameMode] = useState('erase'); // 'erase' or 'populate'
+
   const [targetRegion, setTargetRegion] = useState(null);
   const [time, setTime] = useState(0);
   const [gameStarted, setGameStarted] = useState(false);
   const timerRef = useRef(null);
   const [remainingItems, setRemainingItems] = useState(new Set(RECOGNITION_LIST));
-  
   const [micStatus, setMicStatus] = useState("Initializing Mic...");
-  
-  // 💡 NEW STATE: The nuclear reset key for the microphone
   const [micResetKey, setMicResetKey] = useState(0);
-  
-  const statesLeft = US_STATES.filter(state => remainingItems.has(state)).length;
-  const capitalsLeft = CAPITALS.filter(cap => remainingItems.has(cap)).length;
-  const isGameOver = gameStarted && remainingItems.size === 0;
 
-  // 💡 NEW FUNCTION: Triggers the reset
+  // 💡 TOGGLE BETWEEN ERASE AND POPULATE
+  const toggleGameMode = () => {
+    const newMode = gameMode === 'erase' ? 'populate' : 'erase';
+    setGameMode(newMode);
+    setGameStarted(false);
+    setTime(0);
+    setTargetRegion(null);
+    setMicStatus(`Play Style: ${newMode.toUpperCase()}! Say any state to start.`);
+    // 'Erase' starts full, 'Populate' starts empty
+    setRemainingItems(newMode === 'erase' ? new Set(RECOGNITION_LIST) : new Set());
+  };
+
   const forceMicReset = useCallback(() => {
-    setMicResetKey(prev => prev + 1); // Changing this number destroys and rebuilds the SpeechController
+    setMicResetKey(prev => prev + 1); 
     setMicStatus("🔄 Restarting Mic...");
   }, []);
 
@@ -53,25 +60,31 @@ export default function App() {
     if (RECOGNITION_LIST.includes(finalMatch)) {
       if (!gameStarted) setGameStarted(true); 
       const meshName = finalMatch.replace(/\s+/g, '_');
-      setTargetRegion(meshName);
 
-      setMicStatus(`✅ Found: ${finalMatch}!`);
+      // 💡 INVERT LOGIC BASED ON PLAY STYLE
+      const isAlreadyFound = gameMode === 'populate' ? remainingItems.has(finalMatch) : !remainingItems.has(finalMatch);
 
-      setRemainingItems((prev) => {
-        const next = new Set(prev);
-        next.delete(finalMatch);
-        return next;
-      });
+      if (!isAlreadyFound) {
+        setTargetRegion(meshName);
+        setMicStatus(`✅ Found: ${finalMatch}!`);
+        setRemainingItems((prev) => {
+          const next = new Set(prev);
+          if (gameMode === 'erase') next.delete(finalMatch);
+          else next.add(finalMatch); // 'populate' mode adds items
+          return next;
+        });
+      } else {
+        setMicStatus(`Already found ${finalMatch}!`);
+      }
     } else {
       setMicStatus(`❌ Unrecognized: "${cleanCommand}"`);
     }
-  }, [gameStarted]);
+  }, [gameStarted, gameMode, remainingItems]);
   
-  
-  // 🛠️ TESTING HACK: Auto-solve every 0.2 seconds
-    useEffect(() => {
+  // 🛠️ TESTING HACK (Still works perfectly with the new modes!)
+  /*
+  useEffect(() => {
     let index = 0;
-    
     const hackInterval = setInterval(() => {
       if (index < RECOGNITION_LIST.length) {
         handleVoiceCommand(RECOGNITION_LIST[index]);
@@ -80,12 +93,12 @@ export default function App() {
         clearInterval(hackInterval);
       }
     }, 800); 
-
     return () => clearInterval(hackInterval);
   }, [handleVoiceCommand]);  
+  */
 
   useEffect(() => {
-    if (gameStarted && remainingItems.size > 0) {
+    if (gameStarted && remainingItems.size > 0 && remainingItems.size < RECOGNITION_LIST.length) {
       timerRef.current = setInterval(() => {
         setTime((prev) => prev + 1);
       }, 1000);
@@ -94,19 +107,28 @@ export default function App() {
     }
     return () => clearInterval(timerRef.current);
   }, [gameStarted, remainingItems.size]);
+
+  // 💡 SMART MATH: Calculate everything dynamically based on mode
+  const statesCount = US_STATES.filter(state => remainingItems.has(state)).length;
+  const capitalsCount = CAPITALS.filter(cap => remainingItems.has(cap)).length;
+  
+  // Ensures SandalsManager still thinks we are counting down to 0!
+  const itemsLeftToFind = gameMode === 'erase' 
+    ? remainingItems.size 
+    : RECOGNITION_LIST.length - remainingItems.size;
+
+  const isGameOver = gameStarted && itemsLeftToFind === 0;
   
   useEffect(() => {
     let fireworksSound;
     let cheersSound;
 
     if (isGameOver) {
-      // import.meta.env.BASE_URL automatically injects '/US-Geo-State-Game/' in production
 		fireworksSound = new Audio(`${import.meta.env.BASE_URL}r3f/music/fireworks.mp3`);
 		cheersSound = new Audio(`${import.meta.env.BASE_URL}r3f/music/cheers.mp3`);
 
       fireworksSound.loop = true;
       cheersSound.loop = true;
-
       fireworksSound.volume = 0.7; 
       cheersSound.volume = 0.5;
 
@@ -144,20 +166,20 @@ export default function App() {
       <Leva hidden />
       
       <AppUI 
-        isGameActive={gameStarted && remainingItems.size > 0} 
+        isGameActive={gameStarted && itemsLeftToFind > 0} 
         time={time} 
-        statesLeft={statesLeft}
-        capitalsLeft={capitalsLeft}
+        statesCount={statesCount}
+        capitalsCount={capitalsCount}
         totalStates={US_STATES.length}
         totalCapitals={CAPITALS.length}
         feedbackText={isGameOver ? "✨ EXPLORER COMPLETE! ✨" : micStatus}
-        
-        // 💡 Pass the reset function down to the UI
+        gameMode={gameMode}             
+        onToggleMode={toggleGameMode}   
         onResetMic={forceMicReset} 
       />
       
       <SpeechController 
-        key={micResetKey} // 💡 Attach the key right here!
+        key={micResetKey} 
         onCommandDetected={handleVoiceCommand} 
         onStatusChange={setMicStatus} 
       />
@@ -179,7 +201,7 @@ export default function App() {
       </Canvas>
       
       <Canvas style={{ position: 'absolute', top: 0, left: 0, zIndex: 10, pointerEvents: 'none' }}>
-        <SandalsManager remainingCount={remainingItems.size} />
+        <SandalsManager remainingCount={itemsLeftToFind} />
       </Canvas>
       
     </div>

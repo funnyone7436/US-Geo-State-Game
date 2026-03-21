@@ -3,12 +3,14 @@ import React from 'react'
 export default function AppUI({ 
   isGameActive, 
   time = 0, 
-  statesLeft = 0, 
-  capitalsLeft = 0,
+  statesCount = 0, 
+  capitalsCount = 0,
   totalStates = 50,
   totalCapitals = 50,
   feedbackText,
-  onResetMic // 👈 1. Added the prop here
+  gameMode,           // 👈 New prop for current mode
+  onToggleMode,       // 👈 New prop to switch modes
+  onResetMic
 }) {
   
   const formatTime = (seconds) => {
@@ -21,6 +23,11 @@ export default function AppUI({
   if (feedbackText && feedbackText.includes('EXPLORER')) feedbackColor = '#ffd700'; 
   else if (feedbackText && feedbackText.includes('✅')) feedbackColor = '#4caf50'; 
   else if (feedbackText && feedbackText.includes('❌')) feedbackColor = '#f56565'; 
+
+  // 💡 Adjust the label text based on play style
+  const modeText = gameMode === 'erase' ? 'Left' : 'Found';
+  // Check if we are at the start of the game based on the mode
+  const isAtStart = gameMode === 'erase' ? statesCount === totalStates : statesCount === 0;
 
   return (
     <>
@@ -41,6 +48,35 @@ export default function AppUI({
         minWidth: '160px',
         backdropFilter: 'blur(4px)'
       }}>
+        
+        {/* 💡 NEW PLAY STYLE TOGGLE BUTTON */}
+        <button 
+            onClick={onToggleMode}
+            style={{
+                background: 'rgba(255,215,0,0.2)',
+                border: '1px solid #ffd700',
+                color: '#ffd700',
+                borderRadius: '6px',
+                padding: '4px 8px',
+                fontSize: '11px',
+                cursor: 'pointer',
+                marginBottom: '10px',
+                fontWeight: 'bold',
+                pointerEvents: 'auto',
+                transition: 'all 0.2s ease'
+            }}
+            onMouseOver={(e) => {
+              e.target.style.background = 'rgba(255,215,0,0.4)';
+              e.target.style.color = '#fff';
+            }}
+            onMouseOut={(e) => {
+              e.target.style.background = 'rgba(255,215,0,0.2)';
+              e.target.style.color = '#ffd700';
+            }}
+        >
+            Play Style: {gameMode.toUpperCase()} 🔄
+        </button>
+
         {/* TIMER */}
         <div style={{ 
           display: 'flex', 
@@ -55,25 +91,26 @@ export default function AppUI({
           <span>{formatTime(time)}</span>
         </div>
 
-        {/* STATES COUNTDOWN */}
+        {/* STATES COUNT */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ color: '#aaa' }}>States:</span>
+          <span style={{ color: '#aaa' }}>States ({modeText}):</span>
           <span style={{ 
             fontWeight: 'bold', 
-            color: statesLeft === 0 ? '#4caf50' : '#fff' 
+            // Turn green when goal is reached for that mode
+            color: statesCount === (gameMode === 'erase' ? 0 : totalStates) ? '#4caf50' : '#fff' 
           }}>
-            {statesLeft} / {totalStates}
+            {statesCount} / {totalStates}
           </span>
         </div>
 
-        {/* CAPITALS COUNTDOWN */}
+        {/* CAPITALS COUNT */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ color: '#aaa' }}>Capitals:</span>
+          <span style={{ color: '#aaa' }}>Capitals ({modeText}):</span>
           <span style={{ 
             fontWeight: 'bold', 
-            color: capitalsLeft === 0 ? '#4caf50' : '#fff' 
+            color: capitalsCount === (gameMode === 'erase' ? 0 : totalCapitals) ? '#4caf50' : '#fff' 
           }}>
-            {capitalsLeft} / {totalCapitals}
+            {capitalsCount} / {totalCapitals}
           </span>
         </div>
         
@@ -87,13 +124,12 @@ export default function AppUI({
             borderTop: '1px solid rgba(255,255,255,0.2)',
             paddingTop: '8px',
             fontSize: feedbackText.includes('EXPLORER') ? '16px' : '14px',
-            display: 'flex',            // 💡 Use flexbox to easily center the button
-            flexDirection: 'column',    // 💡 Stack the text and button vertically
+            display: 'flex',            
+            flexDirection: 'column',    
             alignItems: 'center'
           }}>
             <span style={{ marginBottom: '6px' }}>{feedbackText}</span>
             
-			{/* 💡 THE RESET BUTTON */}
             {!feedbackText.includes('EXPLORER') && (
               <button 
                 onClick={onResetMic}
@@ -103,11 +139,11 @@ export default function AppUI({
                   color: '#aaa',
                   borderRadius: '4px',
                   padding: '4px 12px',
-                  fontSize: '12px',          // Slightly bumped up to match
+                  fontSize: '12px',         
                   cursor: 'pointer',
                   marginTop: '6px',
-                  fontFamily: 'inherit',     // 👈 Forces it to use the same font as "Listening..."
-                  fontWeight: '900',         // 👈 Matches the thick, bold look of the text!
+                  fontFamily: 'inherit',     
+                  fontWeight: '900',         
                   transition: 'all 0.2s ease',
                   pointerEvents: 'auto'
                 }}
@@ -144,9 +180,10 @@ export default function AppUI({
           pointerEvents: 'none'
       }}>
           <div>
+            {/* 💡 CONGRATULATIONS LOGIC IMPLEMENTED HERE */}
             {feedbackText && feedbackText.includes('EXPLORER')
               ? "Congratulations! 🎉"
-              : (!isGameActive && statesLeft === totalStates 
+              : (!isGameActive && isAtStart 
                   ? "🎤 Say any State or Capital to start!" 
                   : "Keep going! Say another one...")}
           </div>
