@@ -144,10 +144,12 @@ export default function AppUI({
           pointerEvents: 'none'
       }}>
           <div>
-            {!isGameActive && statesLeft === 50 
-              ? "🎤 Say any State or Capital to start!" 
-              : "Keep going! Say another one..."}
-		  </div>
+            {feedbackText && feedbackText.includes('EXPLORER')
+              ? "Congratulations! 🎉"
+              : (!isGameActive && statesLeft === totalStates 
+                  ? "🎤 Say any State or Capital to start!" 
+                  : "Keep going! Say another one...")}
+          </div>
       </div>
     </>
   )
