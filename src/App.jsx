@@ -82,7 +82,7 @@ export default function App() {
   }, [gameStarted, gameMode, remainingItems]);
   
   // 🛠️ TESTING HACK (Still works perfectly with the new modes!)
-  /*
+  
   useEffect(() => {
     let index = 0;
     const hackInterval = setInterval(() => {
@@ -95,7 +95,7 @@ export default function App() {
     }, 800); 
     return () => clearInterval(hackInterval);
   }, [handleVoiceCommand]);  
-  */
+  
 
   useEffect(() => {
     if (gameStarted && remainingItems.size > 0 && remainingItems.size < RECOGNITION_LIST.length) {
