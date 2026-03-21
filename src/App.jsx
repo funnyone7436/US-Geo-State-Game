@@ -81,22 +81,26 @@ export default function App() {
     }
   }, [gameStarted, gameMode, remainingItems]);
   
-  // 🛠️ TESTING HACK (Fixed to remember its place!)
-  const hackIndexRef = useRef(0); // 💡 1. Store the index in a ref so it survives re-renders
+  // 🛠️ TESTING HACK (Bulletproof Version - Commented out for normal play)
+  /*
+  const latestCommandRef = useRef(handleVoiceCommand);
+  useEffect(() => {
+    latestCommandRef.current = handleVoiceCommand;
+  }, [handleVoiceCommand]);
 
   useEffect(() => {
+    let index = 0; 
     const hackInterval = setInterval(() => {
-      if (hackIndexRef.current < RECOGNITION_LIST.length) {
-        handleVoiceCommand(RECOGNITION_LIST[hackIndexRef.current]);
-        hackIndexRef.current++; // 💡 2. Increase the ref value
+      if (index < RECOGNITION_LIST.length) {
+        latestCommandRef.current(RECOGNITION_LIST[index]);
+        index++;
       } else {
         clearInterval(hackInterval);
       }
     }, 800); 
-
     return () => clearInterval(hackInterval);
-  }, [handleVoiceCommand]);
-  
+  }, []); 
+  */
 
   useEffect(() => {
     if (gameStarted && remainingItems.size > 0 && remainingItems.size < RECOGNITION_LIST.length) {
