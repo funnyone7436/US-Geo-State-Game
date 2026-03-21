@@ -24,35 +24,29 @@ export default function SpeechController({ onCommandDetected, onStatusChange }) 
     recognition.interimResults = false;
     recognition.lang = 'en-US';
 
-    // 1. Tell the UI we are listening
-    recognition.onstart = () => {
-      onStatusChange("Listening...");
-    };
+    // 💡 REMOVED onStatusChange("Listening...") so it stops overwriting your Found messages
+    recognition.onstart = () => {};
 
     recognition.onresult = (event) => {
       const last = event.results.length - 1;
       const spokenPhrase = event.results[last][0].transcript.trim();
       
-      // 2. Tell the UI exactly what was heard
-      onStatusChange(`Heard: "${spokenPhrase}"`);
-      
+      // Let App.jsx handle all the status messages now!
       onCommandDetected(spokenPhrase.toLowerCase());
     };
 
     recognition.onend = () => {
-      // 3. Tell the UI we dropped connection
-      onStatusChange("Connection lost. Re-engaging...");
+      // 💡 REMOVED onStatusChange("Connection lost...") 
+      // The mic will now silently restart in the background without spamming the UI
       setTimeout(startRecognition, 300);
     };
 
     recognition.onerror = (event) => {
       if (event.error === 'no-speech' || event.error === 'aborted') {
-         // Optionally reset to listening if it just timed out
-         onStatusChange("Listening...");
-         return;
+         return; // Silently ignore standard timeouts
       }
       
-      // 4. Tell the UI about errors
+      // Only show actual hard errors
       onStatusChange(`Error: ${event.error}`);
       
       if (event.error === 'network') {
