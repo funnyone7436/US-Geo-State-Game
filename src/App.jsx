@@ -66,6 +66,23 @@ export default function App() {
       setMicStatus(`❌ Unrecognized: "${cleanCommand}"`);
     }
   }, [gameStarted]);
+  
+  
+  // 🛠️ TESTING HACK: Auto-solve every 0.2 seconds
+    useEffect(() => {
+    let index = 0;
+    
+    const hackInterval = setInterval(() => {
+      if (index < RECOGNITION_LIST.length) {
+        handleVoiceCommand(RECOGNITION_LIST[index]);
+        index++;
+      } else {
+        clearInterval(hackInterval);
+      }
+    }, 800); 
+
+    return () => clearInterval(hackInterval);
+  }, [handleVoiceCommand]);  
 
   useEffect(() => {
     if (gameStarted && remainingItems.size > 0) {
