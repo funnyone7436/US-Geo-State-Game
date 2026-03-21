@@ -81,13 +81,14 @@ export default function App() {
     }
   }, [gameStarted, gameMode, remainingItems]);
   
-  // 🛠️ TESTING HACK (Bulletproof Version - Commented out for normal play)
-  
+  // 🚀 TESTING HACK (ACTIVE) 🚀
+  // 1. Secretly store the newest version of the command function in a Ref
   const latestCommandRef = useRef(handleVoiceCommand);
   useEffect(() => {
     latestCommandRef.current = handleVoiceCommand;
   }, [handleVoiceCommand]);
 
+  // 2. Run the timer exactly ONE time so it never restarts
   useEffect(() => {
     let index = 0; 
     const hackInterval = setInterval(() => {
@@ -100,7 +101,7 @@ export default function App() {
     }, 800); 
     return () => clearInterval(hackInterval);
   }, []); 
-  
+  // 🚀 END TESTING HACK 🚀
 
   useEffect(() => {
     if (gameStarted && remainingItems.size > 0 && remainingItems.size < RECOGNITION_LIST.length) {
