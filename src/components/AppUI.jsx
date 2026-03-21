@@ -25,7 +25,7 @@ export default function AppUI({
   else if (feedbackText && feedbackText.includes('❌')) feedbackColor = '#f56565'; 
 
   // 💡 Adjust the label text based on play style
-  const modeText = gameMode === 'erase' ? 'Left' : 'Found';
+ // const modeText = gameMode === 'erase' ? 'Left' : 'Found';
   // Check if we are at the start of the game based on the mode
   const isAtStart = gameMode === 'erase' ? statesCount === totalStates : statesCount === 0;
 
@@ -93,7 +93,7 @@ export default function AppUI({
 
         {/* STATES COUNT */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ color: '#aaa' }}>States ({modeText}):</span>
+          <span style={{ color: '#aaa' }}>States:</span>
           <span style={{ 
             fontWeight: 'bold', 
             // Turn green when goal is reached for that mode
@@ -105,7 +105,7 @@ export default function AppUI({
 
         {/* CAPITALS COUNT */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ color: '#aaa' }}>Capitals ({modeText}):</span>
+          <span style={{ color: '#aaa' }}>Capitals:</span>
           <span style={{ 
             fontWeight: 'bold', 
             color: capitalsCount === (gameMode === 'erase' ? 0 : totalCapitals) ? '#4caf50' : '#fff' 

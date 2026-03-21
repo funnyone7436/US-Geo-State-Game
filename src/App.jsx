@@ -83,7 +83,7 @@ export default function App() {
   
   // 🚀 TESTING HACK (ACTIVE) 🚀
   // 1. Secretly store the newest version of the command function in a Ref
-  const latestCommandRef = useRef(handleVoiceCommand);
+/*   const latestCommandRef = useRef(handleVoiceCommand);
   useEffect(() => {
     latestCommandRef.current = handleVoiceCommand;
   }, [handleVoiceCommand]);
@@ -100,7 +100,7 @@ export default function App() {
       }
     }, 800); 
     return () => clearInterval(hackInterval);
-  }, []); 
+  }, []);  */
   // 🚀 END TESTING HACK 🚀
 
   useEffect(() => {
