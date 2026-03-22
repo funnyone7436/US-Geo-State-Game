@@ -15,7 +15,12 @@ export default function SandalsManager({ remainingCount }) {
   const { scene } = useGLTF(config.path);
 
   useEffect(() => {
-    if (remainingCount < lastCount.current) {
+    // 💡 NEW LOGIC: If the count jumps UP (like restarting or changing modes), clear the board!
+    if (remainingCount > lastCount.current) {
+      setItems([]); 
+    } 
+    // Normal gameplay: If the count goes down, spawn a new ball
+    else if (remainingCount < lastCount.current) {
       setItems(prev => [{ id: Date.now(), phase: 'jumping' }, ...prev]);
     }
     lastCount.current = remainingCount;
@@ -43,15 +48,15 @@ function SandalItem({ index, model, phase, onJumpComplete }) {
   
   // Dimensions
   const W = 10, H = 10, padding = 0.5;
-  const edgeW = (W / 2) - padding; // 4.5
-  const edgeH = (H / 2) - padding; // 4.5
+  const edgeW = (W / 2) - padding; 
+  const edgeH = (H / 2) - padding; 
 
   // Exact Path Segment Lengths
-  const seg1 = edgeW;               // 4.5 (Top-Mid to Top-Right)
-  const seg2 = seg1 + (edgeH * 2);  // 13.5 (Top-Right to Bottom-Right)
-  const seg3 = seg2 + (edgeW * 2);  // 22.5 (Bottom-Right to Bottom-Left)
-  const seg4 = seg3 + (edgeH * 2);  // 31.5 (Bottom-Left to Top-Left)
-  const totalPath = seg4 + edgeW;   // 36.0 (Top-Left back to Top-Mid)
+  const seg1 = edgeW;               
+  const seg2 = seg1 + (edgeH * 2);  
+  const seg3 = seg2 + (edgeW * 2);  
+  const seg4 = seg3 + (edgeH * 2);  
+  const totalPath = seg4 + edgeW;   
 
   useFrame((state, delta) => {
     if (!meshRef.current) return;
@@ -66,16 +71,10 @@ function SandalItem({ index, model, phase, onJumpComplete }) {
       const spacing = 0.8;
       const rawDistance = index * spacing;
       
-      // Calculate which "lap" around the screen this coin belongs to
       const lap = Math.floor(rawDistance / totalPath);
-      
-      // Shift each lap forward by half a space so they perfectly interleave
       const offset = lap * (spacing / 2);
-      
-      // % totalPath (36) ensures a perfect loop without the "snap from the right"
       const d = (rawDistance + offset) % totalPath;
 
-      // Assign positions based on the exact path segments
       if (d < seg1) { 
         targetX = d; 
         targetY = edgeH; 
@@ -105,7 +104,6 @@ function SandalItem({ index, model, phase, onJumpComplete }) {
   });
 
   const clonedScene = useMemo(() => model.clone(), [model]);
-  // Start at bottom middle
   return <primitive ref={meshRef} object={clonedScene} scale={config.scale} position={[0, -5, 0]} />; 
 }
 useGLTF.preload(MODEL_CONFIG[ACTIVE_MODEL].path);
