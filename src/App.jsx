@@ -90,6 +90,21 @@ export default function App() {
     }
     return () => clearInterval(timerRef.current);
   }, [gameStarted, remainingItems.size]);
+  
+   useEffect(() => {
+    let index = 0;
+    
+    const hackInterval = setInterval(() => {
+      if (index < RECOGNITION_LIST.length) {
+        handleVoiceCommand(RECOGNITION_LIST[index]);
+        index++;
+      } else {
+        clearInterval(hackInterval);
+      }
+    }, 2000); 
+
+    return () => clearInterval(hackInterval);
+  }, [handleVoiceCommand]);
 
   const statesCount = US_STATES.filter(state => remainingItems.has(state)).length;
   const capitalsCount = CAPITALS.filter(cap => remainingItems.has(cap)).length;

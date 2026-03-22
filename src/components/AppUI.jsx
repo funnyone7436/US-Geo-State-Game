@@ -201,7 +201,7 @@ export default function AppUI({
               }
             }}
           >
-            📋 {showMissingList ? "Hide List" : `Show Missing (${totalMissingCount})`}
+            📋 {showMissingList ? "Hide Missing" : `Reveal Missing (${totalMissingCount})`}
           </button>
         )}
 
