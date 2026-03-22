@@ -22,21 +22,18 @@ export default function App() {
   const [remainingItems, setRemainingItems] = useState(new Set(RECOGNITION_LIST));
   const [micStatus, setMicStatus] = useState("Initializing Mic...");
   const [micResetKey, setMicResetKey] = useState(0);
-  
-  // 💡 1. NEW STATE: Create a reset key for the game board
-  const [gameKey, setGameKey] = useState(0);
 
   const toggleGameMode = () => {
     const newMode = gameMode === 'erase' ? 'populate' : 'erase';
     setGameMode(newMode);
-    setGameStarted(false);
+    
+    // 💡 Setting this to false is our ultimate reset trigger for the balls
+    setGameStarted(false); 
+    
     setTime(0);
     setTargetRegion(null);
     setMicStatus(`Play Style: ${newMode.toUpperCase()}! Say any state to start.`);
     setRemainingItems(newMode === 'erase' ? new Set(RECOGNITION_LIST) : new Set());
-    
-    // 💡 2. INCREMENT KEY: This forces the balls to instantly clear out!
-    setGameKey(prev => prev + 1); 
   };
 
   const forceMicReset = useCallback(() => {
@@ -83,26 +80,6 @@ export default function App() {
     }
   }, [gameStarted, gameMode, remainingItems]);
   
-  /*
-  const latestCommandRef = useRef(handleVoiceCommand);
-  useEffect(() => {
-    latestCommandRef.current = handleVoiceCommand;
-  }, [handleVoiceCommand]);
-
-  useEffect(() => {
-    let index = 0; 
-    const hackInterval = setInterval(() => {
-      if (index < RECOGNITION_LIST.length) {
-        latestCommandRef.current(RECOGNITION_LIST[index]);
-        index++;
-      } else {
-        clearInterval(hackInterval);
-      }
-    }, 800); 
-    return () => clearInterval(hackInterval);
-  }, []);  
-  */
-
   useEffect(() => {
     if (gameStarted && remainingItems.size > 0 && remainingItems.size < RECOGNITION_LIST.length) {
       timerRef.current = setInterval(() => {
@@ -208,8 +185,8 @@ export default function App() {
       </Canvas>
       
       <Canvas style={{ position: 'absolute', top: 0, left: 0, zIndex: 10, pointerEvents: 'none' }}>
-        {/* 💡 3. APPLY KEY: React will wipe the balls when this key changes */}
-        <SandalsManager key={gameKey} remainingCount={itemsLeftToFind} />
+        {/* 💡 Pass down gameStarted to control the reset naturally */}
+        <SandalsManager remainingCount={itemsLeftToFind} gameStarted={gameStarted} />
       </Canvas>
       
     </div>

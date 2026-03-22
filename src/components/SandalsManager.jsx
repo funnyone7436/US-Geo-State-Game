@@ -8,23 +8,27 @@ const MODEL_CONFIG = {
 };
 const ACTIVE_MODEL = 'USBall';
 
-export default function SandalsManager({ remainingCount }) {
+// 💡 Accept the new gameStarted prop
+export default function SandalsManager({ remainingCount, gameStarted }) {
   const [items, setItems] = useState([]);
   const lastCount = useRef(remainingCount);
   const config = MODEL_CONFIG[ACTIVE_MODEL];
   const { scene } = useGLTF(config.path);
 
   useEffect(() => {
-    // 💡 BULLETPROOF RESET: If the game resets (count hits 100) or goes up, vaporize all balls!
-    if (remainingCount === 100 || remainingCount > lastCount.current) {
+    // 💡 FOOLPROOF FIX: If the game is toggled/reset, vaporize everything safely!
+    if (!gameStarted) {
       setItems([]); 
+      lastCount.current = remainingCount; 
+      return; 
     } 
+    
     // Normal gameplay: If the count goes down, spawn a new ball
-    else if (remainingCount < lastCount.current) {
+    if (remainingCount < lastCount.current) {
       setItems(prev => [{ id: Date.now() + Math.random(), phase: 'jumping' }, ...prev]);
     }
     lastCount.current = remainingCount;
-  }, [remainingCount]);
+  }, [remainingCount, gameStarted]);
 
   return (
     <>
