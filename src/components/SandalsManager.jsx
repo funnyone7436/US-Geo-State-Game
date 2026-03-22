@@ -15,13 +15,13 @@ export default function SandalsManager({ remainingCount }) {
   const { scene } = useGLTF(config.path);
 
   useEffect(() => {
-    // 💡 NEW LOGIC: If the count jumps UP (like restarting or changing modes), clear the board!
-    if (remainingCount > lastCount.current) {
+    // 💡 BULLETPROOF RESET: If the game resets (count hits 100) or goes up, vaporize all balls!
+    if (remainingCount === 100 || remainingCount > lastCount.current) {
       setItems([]); 
     } 
     // Normal gameplay: If the count goes down, spawn a new ball
     else if (remainingCount < lastCount.current) {
-      setItems(prev => [{ id: Date.now(), phase: 'jumping' }, ...prev]);
+      setItems(prev => [{ id: Date.now() + Math.random(), phase: 'jumping' }, ...prev]);
     }
     lastCount.current = remainingCount;
   }, [remainingCount]);
