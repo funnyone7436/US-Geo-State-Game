@@ -91,20 +91,29 @@ export default function App() {
     return () => clearInterval(timerRef.current);
   }, [gameStarted, remainingItems.size]);
   
-   useEffect(() => {
-    let index = 0;
-    
+// 🚀 BULLETPROOF TESTING HACK 🚀
+  
+  // 1. Secretly store the newest version of the command function in a Ref
+  const latestCommandRef = useRef(handleVoiceCommand);
+  useEffect(() => {
+    latestCommandRef.current = handleVoiceCommand;
+  }, [handleVoiceCommand]);
+
+  // 2. Run the timer exactly ONE time so it never restarts
+  useEffect(() => {
+    let index = 0; 
     const hackInterval = setInterval(() => {
       if (index < RECOGNITION_LIST.length) {
-        handleVoiceCommand(RECOGNITION_LIST[index]);
+        // Use the ref instead of the raw function!
+        latestCommandRef.current(RECOGNITION_LIST[index]);
         index++;
       } else {
         clearInterval(hackInterval);
       }
     }, 2000); 
-
+    
     return () => clearInterval(hackInterval);
-  }, [handleVoiceCommand]);
+  }, []);
 
   const statesCount = US_STATES.filter(state => remainingItems.has(state)).length;
   const capitalsCount = CAPITALS.filter(cap => remainingItems.has(cap)).length;
