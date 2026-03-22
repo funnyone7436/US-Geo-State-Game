@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 
 export default function AppUI({ 
   isGameActive, 
@@ -11,11 +11,15 @@ export default function AppUI({
   gameMode,           
   onToggleMode,       
   onResetMic,
-  itemsLeftToFind,    // 👈 New Prop
-  hintText,           // 👈 New Prop
-  onGetHint           // 👈 New Prop
+  // 💡 New Props for calculating the list
+  remainingItems,
+  allStates,
+  allCapitals
 }) {
   
+  // 💡 STATE: Track if the list panel is visible
+  const [showMissingList, setShowMissingList] = useState(false);
+
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -30,8 +34,15 @@ export default function AppUI({
   // Check if we are at the start of the game based on the mode
   const isAtStart = gameMode === 'erase' ? statesCount === totalStates : statesCount === 0;
 
-  // 💡 Logic to show the hint system: Populate mode, 6 or less items left, but not game over yet
-  const showHintSystem = gameMode === 'populate' && itemsLeftToFind <= 6 && itemsLeftToFind > 0;
+  // 💡 New function: Calculate missing States and Capitals not in found basket
+  const getMissingItemsList = () => {
+    const missingStates = allStates.filter(state => !remainingItems.has(state)).sort();
+    const missingCapitals = allCapitals.filter(cap => !remainingItems.has(cap)).sort();
+    return { missingStates, missingCapitals };
+  };
+
+  const { missingStates, missingCapitals } = getMissingItemsList();
+  const totalMissingCount = missingStates.length + missingCapitals.length;
 
   return (
     <>
@@ -50,7 +61,8 @@ export default function AppUI({
         border: !isGameActive && time > 0 ? '2px solid #ffd700' : '1px solid rgba(255,255,255,0.2)',
         zIndex: 9999,
         minWidth: '160px',
-        backdropFilter: 'blur(4px)'
+        backdropFilter: 'blur(4px)',
+        pointerEvents: 'auto' // Make sure children are clickable
       }}>
         
         {/* PLAY STYLE TOGGLE BUTTON */}
@@ -66,7 +78,6 @@ export default function AppUI({
                 cursor: 'pointer',
                 marginBottom: '10px',
                 fontWeight: 'bold',
-                pointerEvents: 'auto',
                 transition: 'all 0.2s ease'
             }}
             onMouseOver={(e) => {
@@ -118,40 +129,78 @@ export default function AppUI({
           </span>
         </div>
         
-        {/* 💡 NEW HINT SYSTEM UI */}
-        {showHintSystem && (
-          <div style={{ marginTop: '4px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            {!hintText ? (
-              <button 
-                onClick={onGetHint}
-                style={{
-                  background: 'rgba(255,255,255,0.1)',
-                  border: '1px dashed rgba(255,255,255,0.4)',
-                  color: '#fff',
-                  borderRadius: '4px',
-                  padding: '6px',
-                  fontSize: '12px',
-                  cursor: 'pointer',
-                  pointerEvents: 'auto',
-                  transition: 'background 0.2s'
-                }}
-                onMouseOver={(e) => e.target.style.background = 'rgba(255,255,255,0.2)'}
-                onMouseOut={(e) => e.target.style.background = 'rgba(255,255,255,0.1)'}
-              >
-                💡 Need a Clue?
-              </button>
-            ) : (
-              <div style={{ 
-                color: '#ffd700', 
-                fontSize: '13px', 
-                fontWeight: 'bold', 
-                textAlign: 'center', 
-                backgroundColor: 'rgba(255,215,0,0.1)', 
-                padding: '6px', 
-                borderRadius: '4px',
-                border: '1px solid rgba(255,215,0,0.3)'
-              }}>
-                {hintText}
+        {/* 💡 NEW: MISSING LIST BUTTON (only in Populate mode) */}
+        {gameMode === 'populate' && (
+          <button 
+            onClick={() => setShowMissingList(prev => !prev)}
+            style={{
+              background: showMissingList ? 'rgba(97, 218, 251, 0.3)' : 'rgba(255,255,255,0.1)',
+              border: showMissingList ? '1px solid #61dafb' : '1px solid rgba(255,255,255,0.2)',
+              color: showMissingList ? '#fff' : '#aaa',
+              borderRadius: '6px',
+              padding: '6px 8px',
+              fontSize: '11px',
+              cursor: 'pointer',
+              marginTop: '8px',
+              fontWeight: 'bold',
+              transition: 'all 0.2s ease',
+            }}
+            onMouseOver={(e) => {
+              if (!showMissingList) {
+                e.target.style.color = '#fff';
+                e.target.style.background = 'rgba(255,255,255,0.2)';
+              }
+            }}
+            onMouseOut={(e) => {
+              if (!showMissingList) {
+                e.target.style.color = '#aaa';
+                e.target.style.background = 'rgba(255,255,255,0.1)';
+              }
+            }}
+          >
+            📋 {showMissingList ? "Hide List" : `Show Missing (${totalMissingCount})`}
+          </button>
+        )}
+
+        {/* 💡 NEW: SCROLLING MISSING LIST PANEL (appears below everything in Populate mode) */}
+        {showMissingList && gameMode === 'populate' && (
+          <div style={{
+            marginTop: '10px',
+            padding: '10px',
+            maxHeight: '300px', // Limits height and makes it scroll
+            overflowY: 'auto',   // Adds the scrollbar
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            borderRadius: '8px',
+            border: '1px dashed rgba(255,255,255,0.3)',
+            fontSize: '12px',
+            color: '#ccc',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '8px'
+          }}>
+            {/* MISSING STATES */}
+            {missingStates.length > 0 && (
+              <div>
+                <div style={{ fontWeight: 'bold', color: '#fff', textDecoration: 'underline', marginBottom: '4px'}}>Missing States</div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2px'}}>
+                  {missingStates.map(state => <span key={state}>• {state}</span>)}
+                </div>
+              </div>
+            )}
+            
+            {/* MISSING CAPITALS */}
+            {missingCapitals.length > 0 && (
+              <div style={{ marginTop: '4px' }}>
+                <div style={{ fontWeight: 'bold', color: '#fff', textDecoration: 'underline', marginBottom: '4px'}}>Missing Capitals</div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2px'}}>
+                  {missingCapitals.map(cap => <span key={cap}>• {cap}</span>)}
+                </div>
+              </div>
+            )}
+
+            {totalMissingCount === 0 && (
+              <div style={{ textAlign: 'center', color: '#4caf50', fontStyle: 'italic', padding: '10px 0'}}>
+                ✨ All items found! ✨
               </div>
             )}
           </div>
