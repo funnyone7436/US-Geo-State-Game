@@ -13,8 +13,7 @@ import SceneBackground from './components/SceneBackground'
 import { US_STATES, CAPITALS, PRONUNCIATION_ALIASES, RECOGNITION_LIST } from './constants';
 
 export default function App() {
-  // 💡 TRACK THE PLAY STYLE
-  const [gameMode, setGameMode] = useState('erase'); // 'erase' or 'populate'
+  const [gameMode, setGameMode] = useState('erase'); 
 
   const [targetRegion, setTargetRegion] = useState(null);
   const [time, setTime] = useState(0);
@@ -23,8 +22,10 @@ export default function App() {
   const [remainingItems, setRemainingItems] = useState(new Set(RECOGNITION_LIST));
   const [micStatus, setMicStatus] = useState("Initializing Mic...");
   const [micResetKey, setMicResetKey] = useState(0);
+  
+  // 💡 1. NEW STATE: Create a reset key for the game board
+  const [gameKey, setGameKey] = useState(0);
 
-  // 💡 TOGGLE BETWEEN ERASE AND POPULATE
   const toggleGameMode = () => {
     const newMode = gameMode === 'erase' ? 'populate' : 'erase';
     setGameMode(newMode);
@@ -32,8 +33,10 @@ export default function App() {
     setTime(0);
     setTargetRegion(null);
     setMicStatus(`Play Style: ${newMode.toUpperCase()}! Say any state to start.`);
-    // 'Erase' starts full, 'Populate' starts empty
     setRemainingItems(newMode === 'erase' ? new Set(RECOGNITION_LIST) : new Set());
+    
+    // 💡 2. INCREMENT KEY: This forces the balls to instantly clear out!
+    setGameKey(prev => prev + 1); 
   };
 
   const forceMicReset = useCallback(() => {
@@ -61,7 +64,6 @@ export default function App() {
       if (!gameStarted) setGameStarted(true); 
       const meshName = finalMatch.replace(/\s+/g, '_');
 
-      // 💡 INVERT LOGIC BASED ON PLAY STYLE
       const isAlreadyFound = gameMode === 'populate' ? remainingItems.has(finalMatch) : !remainingItems.has(finalMatch);
 
       if (!isAlreadyFound) {
@@ -70,7 +72,7 @@ export default function App() {
         setRemainingItems((prev) => {
           const next = new Set(prev);
           if (gameMode === 'erase') next.delete(finalMatch);
-          else next.add(finalMatch); // 'populate' mode adds items
+          else next.add(finalMatch); 
           return next;
         });
       } else {
@@ -81,14 +83,12 @@ export default function App() {
     }
   }, [gameStarted, gameMode, remainingItems]);
   
-  // 🚀 TESTING HACK (ACTIVE) 🚀
-  // 1. Secretly store the newest version of the command function in a Ref
-/* const latestCommandRef = useRef(handleVoiceCommand);
+  /*
+  const latestCommandRef = useRef(handleVoiceCommand);
   useEffect(() => {
     latestCommandRef.current = handleVoiceCommand;
   }, [handleVoiceCommand]);
 
-  // 2. Run the timer exactly ONE time so it never restarts
   useEffect(() => {
     let index = 0; 
     const hackInterval = setInterval(() => {
@@ -100,8 +100,8 @@ export default function App() {
       }
     }, 800); 
     return () => clearInterval(hackInterval);
-  }, []);  */
-  // 🚀 END TESTING HACK 🚀
+  }, []);  
+  */
 
   useEffect(() => {
     if (gameStarted && remainingItems.size > 0 && remainingItems.size < RECOGNITION_LIST.length) {
@@ -114,11 +114,9 @@ export default function App() {
     return () => clearInterval(timerRef.current);
   }, [gameStarted, remainingItems.size]);
 
-  // 💡 SMART MATH: Calculate everything dynamically based on mode
   const statesCount = US_STATES.filter(state => remainingItems.has(state)).length;
   const capitalsCount = CAPITALS.filter(cap => remainingItems.has(cap)).length;
   
-  // Ensures SandalsManager still thinks we are counting down to 0!
   const itemsLeftToFind = gameMode === 'erase' 
     ? remainingItems.size 
     : RECOGNITION_LIST.length - remainingItems.size;
@@ -182,7 +180,6 @@ export default function App() {
         gameMode={gameMode}             
         onToggleMode={toggleGameMode}   
         onResetMic={forceMicReset}
-        // 💡 Props for the missing list panel
         remainingItems={remainingItems} 
         allStates={US_STATES}
         allCapitals={CAPITALS}
@@ -211,7 +208,8 @@ export default function App() {
       </Canvas>
       
       <Canvas style={{ position: 'absolute', top: 0, left: 0, zIndex: 10, pointerEvents: 'none' }}>
-        <SandalsManager remainingCount={itemsLeftToFind} />
+        {/* 💡 3. APPLY KEY: React will wipe the balls when this key changes */}
+        <SandalsManager key={gameKey} remainingCount={itemsLeftToFind} />
       </Canvas>
       
     </div>
