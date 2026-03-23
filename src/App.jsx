@@ -110,7 +110,7 @@ export default function App() {
       } else {
         clearInterval(hackInterval);
       }
-    }, 2000); 
+    }, 200); 
     
     return () => clearInterval(hackInterval);
   }, []);
