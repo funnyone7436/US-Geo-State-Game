@@ -94,7 +94,7 @@ export default function App() {
 // 🚀 BULLETPROOF TESTING HACK 🚀
   
   // 1. Secretly store the newest version of the command function in a Ref
-  const latestCommandRef = useRef(handleVoiceCommand);
+ /*  const latestCommandRef = useRef(handleVoiceCommand);
   useEffect(() => {
     latestCommandRef.current = handleVoiceCommand;
   }, [handleVoiceCommand]);
@@ -113,7 +113,7 @@ export default function App() {
     }, 200); 
     
     return () => clearInterval(hackInterval);
-  }, []);
+  }, []); */
 
   const statesCount = US_STATES.filter(state => remainingItems.has(state)).length;
   const capitalsCount = CAPITALS.filter(cap => remainingItems.has(cap)).length;
